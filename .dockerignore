@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Documentation (if not needed in container)
+docs/
+*.md
+!README.md
+
+# Frontend dev dependencies (we'll build separately)
+frontend/node_modules/
+frontend/.npm
+frontend/.yarn
+frontend/dist/
+frontend/build/
+
+# Environment files (will be mounted as secrets)
+.env
+.env.*
+
+# Testing
+test_*.py
+test_*.sh
+*.test.py
+coverage/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+logs/
+
+# Database files (will be mounted as volumes)
+data/chroma_db/
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup

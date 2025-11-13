@@ -1,0 +1,25 @@
+# Core
+fastapi==0.115.4
+uvicorn[standard]==0.32.0
+python-dotenv==1.0.1
+pydantic==2.9.2
+
+# LangChain
+langchain==0.3.7
+langchain-community==0.3.7
+langchain-core==0.3.17
+langgraph==0.2.45
+langchain-anthropic==0.2.4
+
+# Vector Store & Embeddings
+chromadb==0.5.18
+langchain-huggingface==0.1.2
+# PyTorch CPU-only (pas de CUDA pour économiser ~2GB de téléchargement)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1+cpu
+sentence-transformers==3.2.1
+
+# Document Loaders
+pypdf==5.1.0
+python-multipart==0.0.12
+unstructured==0.16.7
