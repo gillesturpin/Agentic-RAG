@@ -1,20 +1,19 @@
 # 🔬 Agentic RAG
 
-**Pure LangChain/LangGraph implementations** - Following official documentation
+**Pure LangChain/LangGraph implementation** - Following official documentation
 
 ## What This Is
 
 ✅ **100% conforming** to official LangChain documentation
 ✅ **No business metrics** - Pure RAG implementation
-✅ **Two agents** - Standard RAG vs Advanced RAG with grading
+✅ **Optimized agent** - k=4 retrieval with enhanced prompt for completeness
 
 ## Project Structure
 
 ```
 backend/
 ├── rags/
-│   ├── rag_agent.py              # Standard RAG with create_agent()
-│   └── advanced_rag_agent.py     # Advanced RAG with StateGraph + grading
+│   └── rag_agent.py              # Optimized RAG Agent (k=4, enhanced prompt)
 │
 ├── api/
 │   └── main.py                    # FastAPI server
@@ -71,9 +70,8 @@ cd backend/api
 python main.py
 ```
 
-### 3. Test Agents
+### 3. Test the Agent
 
-#### Standard RAG Agent
 ```bash
 curl -X POST http://localhost:8000/api/rag_agent \
   -H "Content-Type: application/json" \
@@ -83,65 +81,33 @@ curl -X POST http://localhost:8000/api/rag_agent \
 Response:
 ```json
 {
-  "answer": "Task decomposition is...",
+  "answer": "Task decomposition is a technique where complex tasks are broken down into smaller, manageable steps...",
   "used_retrieval": true,
-  "latency": 8.5
+  "latency": 8.5,
+  "thread_id": "thread-xyz"
 }
 ```
 
-#### Advanced RAG Agent (with grading)
-```bash
-curl -X POST http://localhost:8000/api/advanced_rag_agent \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What are types of reward hacking?"}'
-```
+## Agent Features
 
-Response:
-```json
-{
-  "answer": "Reward hacking can be categorized into...",
-  "num_rewrites": 0,
-  "latency": 12.3
-}
-```
-
-#### Compare Both Agents
-```bash
-curl -X POST http://localhost:8000/api/compare \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Explain chain of thought"}'
-```
-
-## The Two Agents
-
-### 1️⃣ RAG Agent
 - **Based on**: [Build a RAG agent](https://python.langchain.com/docs/tutorials/rag_agent/)
-- **Implementation**: `create_agent()` with retrieval tool
-- **Flow**: Question → LLM decides → Retrieve if needed → Generate
-- **Speed**: Faster (single decision)
-
-### 2️⃣ Advanced RAG Agent
-- **Based on**: [Build a custom RAG agent](https://python.langchain.com/docs/tutorials/langgraph/agentic_rag/)
-- **Implementation**: `StateGraph` with conditional edges
-- **Flow**: Question → Retrieve → Grade documents → Rewrite if needed → Generate
-- **Features**: Document grading, query rewriting
-
-## Key Differences
-
-| Feature | RAG Agent | Advanced RAG Agent |
-|---------|-----------|-------------------|
-| **Retrieval** | Optional (LLM decides) | Always retrieves |
-| **Document Grading** | No | Yes |
-| **Query Rewriting** | No | Yes (if docs irrelevant) |
-| **Speed** | Faster | Slower |
-| **Use Case** | General queries | Complex/ambiguous queries |
+- **Implementation**: Tool-based agent with LangGraph
+- **Flow**: Question → LLM decides → Retrieve if needed → Generate complete answer
+- **Optimizations**:
+  - k=4 retrieval (balanced coverage without dilution)
+  - Enhanced system prompt for complete and comprehensive answers
+  - Thread-based conversation memory (InMemorySaver)
+- **Use Case**: General-purpose question answering with context-aware retrieval
 
 ## API Endpoints
 
 - `GET /` - API status
-- `POST /api/rag_agent` - Query standard RAG agent
-- `POST /api/advanced_rag_agent` - Query advanced RAG agent
-- `POST /api/compare` - Compare both agents
+- `POST /api/rag_agent` - Query the RAG agent (with optional thread_id for conversation memory)
+- `POST /api/query` - Adapter endpoint for frontend (with session management)
+- `POST /api/query/stream` - Streaming endpoint using Server-Sent Events
+- `POST /api/upload` - Upload documents (PDF, TXT, MD, DOCX)
+- `GET /api/documents` - List uploaded documents
+- `DELETE /api/documents` - Delete a document
 - `GET /health` - Health check
 
 ## Architecture
@@ -149,32 +115,37 @@ curl -X POST http://localhost:8000/api/compare \
 ```
 User Query
     ↓
-FastAPI
+FastAPI (v2.0.0)
     ↓
-┌─────────────────┬─────────────────┐
-│   RAG Agent     │  Advanced RAG   │
-│  create_agent() │   StateGraph    │
-│                 │                 │
-│  - Tool call    │  - Retrieve     │
-│  - Generate     │  - Grade        │
-│                 │  - Rewrite      │
-│                 │  - Generate     │
-└─────────────────┴─────────────────┘
-    ↓                    ↓
-  Answer              Answer
+RAG Agent (k=4, enhanced prompt)
+    │
+    ├─ LLM decides if retrieval needed
+    ├─ Retrieve from ChromaDB (if needed)
+    ├─ Generate complete answer
+    └─ Maintain conversation memory (InMemorySaver)
+    ↓
+Complete Answer
 ```
 
-## Based On Official Tutorials
+## Based On Official Tutorial
 
-This project implements **exactly** what's documented in:
-1. [Build a RAG agent with LangChain](https://python.langchain.com/docs/tutorials/rag_agent/)
-2. [Build a custom RAG agent with LangGraph](https://python.langchain.com/docs/tutorials/langgraph/agentic_rag/)
+This project implements the pattern documented in:
+- [Build a RAG agent with LangChain](https://python.langchain.com/docs/tutorials/rag_agent/)
+
+**Optimizations added**:
+- k=4 retrieval (vs k=2 in tutorial) for better coverage
+- Enhanced system prompt emphasizing completeness
+- Thread-based conversation memory with InMemorySaver
 
 No custom business metrics or proprietary features - just pure LangChain/LangGraph.
 
 ## Frontend
 
-React frontend available in `frontend/` for visual comparison of agents.
+React frontend available in `frontend/` with:
+- Real-time streaming responses (Server-Sent Events)
+- Document upload support (PDF, TXT, MD, DOCX)
+- Conversation history
+- Session management
 
 ```bash
 cd frontend
@@ -182,7 +153,7 @@ npm install
 npm run dev
 ```
 
-Access at http://localhost:5173
+Access at http://localhost:5173 (or http://localhost:5174 if 5173 is occupied)
 
 ## License
 
