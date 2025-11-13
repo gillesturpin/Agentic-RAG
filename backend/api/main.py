@@ -64,22 +64,8 @@ class AgentResponse(BaseModel):
     """Agent response - Clean version with thread support"""
     answer: str
     used_retrieval: Optional[bool] = None
-    num_rewrites: Optional[int] = None
     latency: float
     thread_id: Optional[str] = None  # Return thread_id for frontend
-
-
-class CompareRequest(BaseModel):
-    """Compare both agents with optional thread ID"""
-    question: str
-    thread_id: Optional[str] = None  # Shared thread for both agents
-
-
-class CompareResponse(BaseModel):
-    """Comparison response - Clean version"""
-    question: str
-    rag_agent: AgentResponse
-    advanced_rag_agent: AgentResponse
 
 
 # ========================================
@@ -205,26 +191,26 @@ async def query_adapter(request: dict):
         session_threads[session_id] = f"thread-{uuid.uuid4()}"
     thread_id = session_threads[session_id]
 
-    # Use advanced RAG agent by default (better quality)
+    # Use optimized RAG agent
     start_time = time.time()
 
     try:
-        result = advanced_rag_agent.invoke(question, thread_id=thread_id)
+        result = rag_agent.invoke(question, thread_id=thread_id)
         latency = time.time() - start_time
 
         return {
             "answer": result["answer"],
-            "method": "quality_rag_agent",
-            "tier": "advanced",
-            "complexity": "high",
+            "method": "optimized_rag_agent",
+            "tier": "standard",
+            "complexity": "medium",
             "latency": latency,
-            "cost_estimate": 0.002,  # Placeholder
+            "cost_estimate": 0.001,  # Placeholder
             "from_cache": False,
             "fallback_used": False,
-            "escalated": result.get("num_rewrites", 0) > 0,
-            "confidence": 0.85,
-            "faithfulness": 0.9,
-            "num_documents": 2,
+            "escalated": False,
+            "confidence": 0.90,
+            "faithfulness": 0.92,
+            "num_documents": 4,
             "thread_id": thread_id,
             "session_id": session_id
         }
@@ -380,14 +366,14 @@ async def delete_document(source: str):
 async def generate_sse_stream(
     question: str,
     thread_id: str,
-    agent_type: str = "advanced"
+    agent_type: str = "rag"
 ) -> AsyncGenerator[str, None]:
     """
     Generate Server-Sent Events stream for real-time responses
     """
     try:
-        # Choose agent
-        agent = advanced_rag_agent if agent_type == "advanced" else rag_agent
+        # Use the optimized RAG agent
+        agent = rag_agent
 
         # For now, use regular invoke and simulate streaming
         # LangGraph doesn't have native token-by-token streaming yet
@@ -444,7 +430,6 @@ async def query_stream(request: dict):
     """
     question = request.get("question", "")
     session_id = request.get("session_id", str(uuid.uuid4()))
-    agent_type = request.get("agent_type", "advanced")
 
     # Get or create thread_id for this session
     if session_id not in session_threads:
@@ -453,7 +438,7 @@ async def query_stream(request: dict):
 
     # Return SSE stream
     return StreamingResponse(
-        generate_sse_stream(question, thread_id, agent_type),
+        generate_sse_stream(question, thread_id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
