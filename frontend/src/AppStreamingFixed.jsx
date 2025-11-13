@@ -58,16 +58,7 @@ function App() {
 
     try {
       const response = await axios.post(`${API_URL}/api/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 60000, // 60 seconds timeout
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          setUploadProgress({
-            total: files.length,
-            current: 0,
-            status: `Uploading... ${percentCompleted}%`
-          })
-        }
+        headers: { 'Content-Type': 'multipart/form-data' }
       })
 
       const results = response.data.results || []
