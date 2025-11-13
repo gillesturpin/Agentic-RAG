@@ -21,7 +21,6 @@ function App() {
   const [showUpload, setShowUpload] = useState(false)
   const [showDocumentsModal, setShowDocumentsModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [agentType, setAgentType] = useState('advanced')
 
   // Use ref to avoid recreating the streaming message on every render
   const streamingContentRef = useRef('')
@@ -174,8 +173,7 @@ function App() {
         },
         body: JSON.stringify({
           question: currentQuestion,
-          session_id: `session-${Date.now()}`,
-          agent_type: agentType
+          session_id: `session-${Date.now()}`
         })
       })
 
@@ -488,50 +486,7 @@ function App() {
           <div className={`messages ${messages.length === 0 ? 'empty' : ''}`}>
             {messages.length === 0 ? (
               <div className="empty-state">
-                <h2 style={{marginBottom: '1rem', fontSize: '2rem', color: 'var(--text-primary)'}}>Agentic RAG</h2>
-
-                {/* Agent Type Selector */}
-                <div style={{
-                  display: 'flex',
-                  gap: '1rem',
-                  marginBottom: '2rem',
-                  justifyContent: 'center'
-                }}>
-                  <button
-                    type="button"
-                    onClick={() => setAgentType('standard')}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '0.75rem',
-                      border: agentType === 'standard' ? '2px solid #3b82f6' : '1px solid var(--border-color)',
-                      background: agentType === 'standard' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-dark)',
-                      color: agentType === 'standard' ? '#3b82f6' : 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      fontSize: '0.95rem',
-                      fontWeight: agentType === 'standard' ? '600' : '400',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    Standard RAG
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAgentType('advanced')}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '0.75rem',
-                      border: agentType === 'advanced' ? '2px solid #8b5cf6' : '1px solid var(--border-color)',
-                      background: agentType === 'advanced' ? 'rgba(139, 92, 246, 0.1)' : 'var(--bg-dark)',
-                      color: agentType === 'advanced' ? '#8b5cf6' : 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      fontSize: '0.95rem',
-                      fontWeight: agentType === 'advanced' ? '600' : '400',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    Advanced RAG
-                  </button>
-                </div>
+                <h2 style={{marginBottom: '2rem', fontSize: '2rem', color: 'var(--text-primary)'}}>Agentic RAG</h2>
 
                 <form className="centered-input-form" onSubmit={handleSubmit}>
                   <input
@@ -626,49 +581,6 @@ function App() {
 
           {messages.length > 0 && (
             <div>
-              {/* Agent Type Selector - Always visible */}
-              <div style={{
-                display: 'flex',
-                gap: '0.5rem',
-                padding: '0.75rem',
-                justifyContent: 'center',
-                borderTop: '1px solid var(--border-color)'
-              }}>
-                <button
-                  type="button"
-                  onClick={() => setAgentType('standard')}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.5rem',
-                    border: agentType === 'standard' ? '2px solid #3b82f6' : '1px solid var(--border-color)',
-                    background: agentType === 'standard' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-dark)',
-                    color: agentType === 'standard' ? '#3b82f6' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    fontWeight: agentType === 'standard' ? '600' : '400',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  Standard RAG
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAgentType('advanced')}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.5rem',
-                    border: agentType === 'advanced' ? '2px solid #8b5cf6' : '1px solid var(--border-color)',
-                    background: agentType === 'advanced' ? 'rgba(139, 92, 246, 0.1)' : 'var(--bg-dark)',
-                    color: agentType === 'advanced' ? '#8b5cf6' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    fontWeight: agentType === 'advanced' ? '600' : '400',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  Advanced RAG
-                </button>
-              </div>
               <form className="input-form" onSubmit={handleSubmit}>
                 <input
                   type="text"

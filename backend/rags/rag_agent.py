@@ -50,7 +50,7 @@ class RAGAgent:
         @tool
         def retrieve(query: str):
             """Retrieve information related to a query."""
-            retrieved_docs = self.vectorstore.similarity_search(query, k=2)
+            retrieved_docs = self.vectorstore.similarity_search(query, k=4)
             serialized = "\n\n".join(
                 f"Source: {doc.metadata}\nContent: {doc.page_content}"
                 for doc in retrieved_docs
@@ -113,7 +113,10 @@ class RAGAgent:
         if not messages or messages[0].type != "system":
             system_msg = SystemMessage(
                 "You have access to a tool that retrieves context from documents. "
-                "Use the tool to help answer user queries."
+                "Use the tool to help answer user queries. "
+                "IMPORTANT: Provide COMPLETE and COMPREHENSIVE answers with ALL details from the retrieved context. "
+                "If the context mentions multiple items (e.g., phases, steps, stages), include ALL of them with their full descriptions. "
+                "Do not omit any information. Use proper Markdown formatting for readability."
             )
             messages = [system_msg] + messages
 

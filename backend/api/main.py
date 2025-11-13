@@ -24,7 +24,6 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
 from rags.rag_agent import RAGAgent
-from rags.advanced_rag_agent import AdvancedRAGAgent
 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -37,8 +36,8 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 app = FastAPI(
     title="Agentic RAG API",
-    description="Compare RAG Agent vs Advanced RAG Agent - Pure LangChain/LangGraph implementations",
-    version="1.0.0"
+    description="Optimized RAG Agent - Pure LangChain/LangGraph implementation with k=4 retrieval",
+    version="2.0.0"
 )
 
 # CORS
@@ -88,7 +87,6 @@ class CompareResponse(BaseModel):
 # ========================================
 
 rag_agent = None
-advanced_rag_agent = None
 vectorstore = None
 
 
@@ -98,8 +96,8 @@ vectorstore = None
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize RAG agents on startup"""
-    global rag_agent, advanced_rag_agent, vectorstore
+    """Initialize RAG agent on startup"""
+    global rag_agent, vectorstore
 
     print("🚀 Starting Agentic RAG API...")
 
@@ -119,15 +117,14 @@ async def startup_event():
         embedding_function=embeddings
     )
 
-    # Create shared checkpointer for memory
-    shared_checkpointer = InMemorySaver()
+    # Create checkpointer for memory
+    checkpointer = InMemorySaver()
     print("💾 Memory system (InMemorySaver) initialized")
 
-    # Initialize agents with shared memory
-    rag_agent = RAGAgent(vectorstore, checkpointer=shared_checkpointer)
-    advanced_rag_agent = AdvancedRAGAgent(vectorstore, checkpointer=shared_checkpointer)
+    # Initialize RAG agent with memory
+    rag_agent = RAGAgent(vectorstore, checkpointer=checkpointer)
 
-    print("✅ Agents initialized")
+    print("✅ RAG Agent initialized (k=4, improved prompt)")
 
 
 # ========================================
@@ -139,9 +136,9 @@ async def root():
     """API status"""
     return {
         "status": "online",
-        "version": "1.0.0",
-        "mode": "LangChain/LangGraph implementations",
-        "agents": ["rag_agent", "advanced_rag_agent"]
+        "version": "2.0.0",
+        "mode": "Optimized RAG (k=4, improved prompt)",
+        "agent": "rag_agent"
     }
 
 
@@ -169,66 +166,6 @@ async def query_rag_agent(request: QueryRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/advanced_rag_agent", response_model=AgentResponse)
-async def query_advanced_rag_agent(request: QueryRequest):
-    """Query the advanced RAG agent with optional memory support"""
-    start_time = time.time()
-
-    try:
-        # Generate thread_id if not provided
-        thread_id = request.thread_id or str(uuid.uuid4())
-
-        # Invoke with thread_id for memory support
-        result = advanced_rag_agent.invoke(request.question, thread_id=thread_id)
-        latency = time.time() - start_time
-
-        return AgentResponse(
-            answer=result["answer"],
-            num_rewrites=result.get("num_rewrites"),
-            latency=latency,
-            thread_id=result.get("thread_id")  # Return thread_id
-        )
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/compare", response_model=CompareResponse)
-async def compare_agents(request: CompareRequest):
-    """Compare both agents on the same question with shared memory"""
-    try:
-        # Use same thread_id for both agents to share memory
-        # Generate if not provided
-        thread_id = request.thread_id or str(uuid.uuid4())
-
-        # Query RAG Agent
-        start1 = time.time()
-        result1 = rag_agent.invoke(request.question, thread_id=thread_id)
-        latency1 = time.time() - start1
-
-        # Query Advanced RAG Agent (sees RAG Agent's context if same thread)
-        start2 = time.time()
-        result2 = advanced_rag_agent.invoke(request.question, thread_id=thread_id)
-        latency2 = time.time() - start2
-
-        return CompareResponse(
-            question=request.question,
-            rag_agent=AgentResponse(
-                answer=result1["answer"],
-                used_retrieval=result1.get("used_retrieval"),
-                latency=latency1,
-                thread_id=result1.get("thread_id")
-            ),
-            advanced_rag_agent=AgentResponse(
-                answer=result2["answer"],
-                num_rewrites=result2.get("num_rewrites"),
-                latency=latency2,
-                thread_id=result2.get("thread_id")
-            )
-        )
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/health")
@@ -237,7 +174,6 @@ async def health_check():
     return {
         "status": "healthy",
         "rag_agent": rag_agent is not None,
-        "advanced_rag_agent": advanced_rag_agent is not None,
         "vectorstore": vectorstore is not None
     }
 
